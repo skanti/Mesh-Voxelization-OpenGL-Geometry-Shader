@@ -1,0 +1,9 @@
+# hidden files
+.*
+
+# generated 
+build
+
+# exception
+!.gitignore
+

@@ -26,8 +26,9 @@ layout(triangle_strip, max_vertices = 3) out;
 uniform ivec3 voxelResolution;
 
 //Voxel output
-layout(r8ui, binding = 0) uniform uimage3D voxelOccupancy;
-layout(rgba8, binding = 1) uniform image3D voxelColor;
+layout(rgba32i, binding = 0) uniform iimageBuffer voxelIndex;
+layout(rgba8, binding = 1) uniform imageBuffer voxelValue;
+layout(binding = 2) uniform atomic_uint voxelCounter;
 
 in block
 {
@@ -108,11 +109,11 @@ void swizzleTri(inout vec3 v0,
 	}
 }
 
-void writeVoxels(ivec3 coord, uint val, vec4 color)
-{
-	//modify as necessary for attributes/storage type
-	imageStore(voxelOccupancy, coord, uvec4(val));
-	imageStore(voxelColor, coord, color);
+void writeVoxels(ivec3 coord, uint val, vec4 color) {
+	int index = int(atomicCounterIncrement(voxelCounter));
+	imageStore(voxelIndex, index, ivec4(coord, 0));
+	imageStore(voxelValue, index, color);
+	
 }
 
 void voxelizeTriPostSwizzle(vec3 v0, vec3 v1, vec3 v2, vec3 n, mat3 unswizzle, ivec3 minVoxIndex, ivec3 maxVoxIndex)
@@ -246,14 +247,9 @@ void main()
 
 	ivec3 minVoxIndex = ivec3(clamp(floor(AABBmin), ivec3(0), voxelResolution));
 	ivec3 maxVoxIndex = ivec3(clamp( ceil(AABBmax), ivec3(0), voxelResolution));
-
-	ivec3 isize = imageSize(voxelOccupancy);
-	//imageStore(voxelOccupancy, ivec3(0, 0, 0), uvec4(voxelResolution.x));
-	//imageStore(voxelOccupancy, ivec3(1, 0, 0), uvec4(voxelResolution.y));
-	//imageStore(voxelOccupancy, ivec3(2, 0, 0), uvec4(voxelResolution.z));
-	//imageStore(voxelOccupancy, ivec3(0, 1, 0), uvec4(AABBmax.x + 1));
-	//imageStore(voxelOccupancy, ivec3(0, 2, 0), uvec4(AABBmax.y + 1));
-	//imageStore(voxelOccupancy, ivec3(0, 3, 0), uvec4(AABBmax.z + 1));
-	voxelizeTriPostSwizzle(v0, v1, v2, n, unswizzle, minVoxIndex, maxVoxIndex);
+	
+	int index = int(atomicCounterIncrement(voxelCounter));
+	imageStore(voxelIndex, index, ivec4(index));
+	//voxelizeTriPostSwizzle(v0, v1, v2, n, unswizzle, minVoxIndex, maxVoxIndex);
 }
 

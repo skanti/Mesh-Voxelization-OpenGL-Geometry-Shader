@@ -38,7 +38,7 @@ struct RenderVAO {
 
 struct VoxelizationVAO {
 	GLuint program;
-	GLuint id_vao, id_vbo_position, id_ebo, id_image_occupany, id_image_color;
+	GLuint id_vao, id_vbo_position, id_ebo, id_imagebuffer_index, id_imagebuffer_value, id_atomic_counter;
 
 };
 
@@ -210,55 +210,59 @@ public:
 		voxelResolution[2] = 23;
 		scale = 0.4/voxelResolution[0];
 
-		std::vector<uint8_t> image(voxelResolution[0]*voxelResolution[1]*voxelResolution[2], 0);
-		//std::iota(image.begin(), image.end(), 1);
-		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-		// -> Occuancy Grid 
+		// -> Index Grid 
         glActiveTexture(GL_TEXTURE0);
-        glGenTextures(1, &vao_voxelization.id_image_occupany);
-        glBindTexture(GL_TEXTURE_3D, vao_voxelization.id_image_occupany);
-        glTexStorage3D(GL_TEXTURE_3D, 1, GL_R8UI, voxelResolution[0], voxelResolution[1], voxelResolution[2]);
-        glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, voxelResolution[0], voxelResolution[1], voxelResolution[2], GL_RED_INTEGER, GL_UNSIGNED_BYTE, image.data());
-        glBindImageTexture(0, vao_voxelization.id_image_occupany, 0, GL_TRUE, 0, GL_READ_WRITE, GL_R8UI);
+        glGenTextures(1, &vao_voxelization.id_imagebuffer_index);
+        glBindTexture(GL_TEXTURE_BUFFER, vao_voxelization.id_imagebuffer_index);
+		glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32I, vao_voxelization.id_imagebuffer_index);
+        glBindImageTexture(0, vao_voxelization.id_imagebuffer_index, 0, GL_TRUE, 0, GL_READ_WRITE, GL_R32I);
 		// <-
 		
-		//// -> Color Grid 
-        //glActiveTexture(GL_TEXTURE1);
-        //glGenTextures(1, &vao_voxelization.id_image_color);
-        //glBindTexture(GL_TEXTURE_3D, vao_voxelization.id_image_color);
-        //glTexStorage3D(GL_TEXTURE_3D, 1, GL_RGBA8, voxelResolution[0], voxelResolution[1], voxelResolution[2]);
-        ////glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.width, image.height, GL_RGB, GL_UNSIGNED_BYTE, image.data.data());
-        //glBindImageTexture(1, vao_voxelization.id_image_color, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA8);
-		//// <-
+		// -> Value Grid 
+        glActiveTexture(GL_TEXTURE1);
+        glGenTextures(1, &vao_voxelization.id_imagebuffer_value);
+        glBindTexture(GL_TEXTURE_BUFFER, vao_voxelization.id_imagebuffer_value);
+		glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA8, vao_voxelization.id_imagebuffer_value);
+        glBindImageTexture(1, vao_voxelization.id_imagebuffer_value, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA8);
+		// <-
+		
+		// -> Voxel Counter
+		glGenBuffers(1, &vao_voxelization.id_atomic_counter);	
+		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, vao_voxelization.id_atomic_counter);
+		GLuint voxel_counter[1] = {0};
+		glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint) , voxel_counter, GL_DYNAMIC_DRAW);
+		glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 2, vao_voxelization.id_atomic_counter);
+		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+		// <-
 		
 		voxelize();
-		glMemoryBarrier(GL_ALL_BARRIER_BITS);
 		
-		glPixelStorei(GL_PACK_ALIGNMENT, 1);
+		// -> read atomic counter
+		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, vao_voxelization.id_atomic_counter);
+		glGetBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), voxel_counter);
+		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+		
+		n_size = voxel_counter[0];
+		position.resize(n_size*3);
+		printf("n_voxel: %d\n", n_size);
+		// <-
+			
+		// -> read buffer
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_3D, vao_voxelization.id_image_occupany);
-		glGetTexImage(GL_TEXTURE_3D, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, image.data());
-		glMemoryBarrier(GL_ALL_BARRIER_BITS);
-
-		int sum = std::accumulate(image.begin(), image.end(), 0);
-
-		n_size = 0;
-		for (int i = 0; i < voxelResolution[2]; i++) {
-			for (int j = 0; j < voxelResolution[1]; j++) {
-				for (int k = 0; k < voxelResolution[0]; k++) {
-					int index = i*voxelResolution[1]*voxelResolution[1] + j*voxelResolution[1] + k;
-					if (image[index]) {
-						position.push_back((float)k/voxelResolution[0]);	
-						position.push_back((float)j/voxelResolution[1]);	
-						position.push_back((float)i/voxelResolution[2]);	
-						//printf("v: %d x: %d y: %d z: %d\n", image[index], k, j, i);
-						//printf("v: %d i: %d\n", image[i_counter], i_counter);
-						n_size++;
-					}
-				}
-			}
+        glBindTexture(GL_TEXTURE_BUFFER, vao_voxelization.id_imagebuffer_index);
+		glBindBuffer(GL_TEXTURE_BUFFER, vao_voxelization.id_imagebuffer_index);
+		int32_t *ptr = (int32_t*)glMapBuffer(GL_TEXTURE_BUFFER, GL_READ_WRITE);
+		for (int i = 0; i < 20; ++i) {
+			int x = ptr[3*i + 0];
+			int y = ptr[3*i + 1];
+			int z = ptr[3*i + 2];
+			printf("x: %d y: %d z: %d\n", x, y, z);
 		}
+		glUnmapBuffer(GL_TEXTURE_BUFFER); 
+		glBindBuffer(GL_TEXTURE_BUFFER, 0);
+		// <-
+		exit(0);
+		
 		std::cout << "n_size: " << n_size << std::endl;
     }
     

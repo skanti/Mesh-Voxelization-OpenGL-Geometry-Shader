@@ -15,7 +15,6 @@ This small repo contains an algorithm for voxelizing `.ply` or `.obj` meshes wit
 
 ## Requirements
 - Eigen 3.3
-- LibIGL
 
 ## Contact
 Drop a comment on `Issues` when something is unclear.

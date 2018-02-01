@@ -26,8 +26,8 @@ layout(triangle_strip, max_vertices = 3) out;
 uniform ivec3 voxelResolution;
 
 //Voxel output
-layout(r8ui, binding = 0) uniform writeonly uimage3D voxelOccupancy;
-layout(rgba8, binding = 1) uniform writeonly image3D voxelColor;
+layout(r8ui, binding = 0) uniform uimage3D voxelOccupancy;
+layout(rgba8, binding = 1) uniform image3D voxelColor;
 
 in block
 {
@@ -247,9 +247,13 @@ void main()
 	ivec3 minVoxIndex = ivec3(clamp(floor(AABBmin), ivec3(0), voxelResolution));
 	ivec3 maxVoxIndex = ivec3(clamp( ceil(AABBmax), ivec3(0), voxelResolution));
 
-	//imageStore(voxelOccupancy, ivec3(0, 0, 0), uvec4(1));
-	//imageStore(voxelOccupancy, ivec3(0, 0, 1), uvec4(1));
-	//imageStore(voxelOccupancy, ivec3(0, 0, 2), uvec4(1));
+	ivec3 isize = imageSize(voxelOccupancy);
+	//imageStore(voxelOccupancy, ivec3(0, 0, 0), uvec4(voxelResolution.x));
+	//imageStore(voxelOccupancy, ivec3(1, 0, 0), uvec4(voxelResolution.y));
+	//imageStore(voxelOccupancy, ivec3(2, 0, 0), uvec4(voxelResolution.z));
+	//imageStore(voxelOccupancy, ivec3(0, 1, 0), uvec4(AABBmax.x + 1));
+	//imageStore(voxelOccupancy, ivec3(0, 2, 0), uvec4(AABBmax.y + 1));
+	//imageStore(voxelOccupancy, ivec3(0, 3, 0), uvec4(AABBmax.z + 1));
 	voxelizeTriPostSwizzle(v0, v1, v2, n, unswizzle, minVoxIndex, maxVoxIndex);
 }
 

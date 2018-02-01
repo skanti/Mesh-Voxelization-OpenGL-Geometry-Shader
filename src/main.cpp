@@ -20,15 +20,17 @@
 #define WINDOW_HEIGHT 960
 #define WINDOW_WIDTH 1280 
 
+struct InputArgs {
+	std::string input_file;
+	std::string output_file;
+	int dim;
+} input_args;
+
 struct Mesh {
 	Eigen::Matrix<float, -1, -1> V;
 	Eigen::Matrix<uint32_t, -1, -1> F;
 };
 
-
-struct Voxel {
-	int32_t i, j, k;
-};
 
 struct RenderVAO {
 	GLuint program;
@@ -57,7 +59,7 @@ public:
 	
 	void load_mesh() {
 		tinyobj::attrib_t attrib;
-        std::string filename = "/home/amon/grive/development/Voxelization/resources/bunny.obj";
+        std::string filename = input_args.input_file;
 		std::vector<tinyobj::shape_t> shapes;
 		std::vector<tinyobj::material_t> materials;
 		std::string err;
@@ -83,15 +85,14 @@ public:
 			zmax = mesh.V(2, i) > zmax ? mesh.V(2, i) : zmax;
 		}
 		
-		res = 0.002;
 		float dx = (xmax - xmin);
 		float dy = (ymax - ymin);
 		float dz = (zmax - zmin);
 		float dmax = std::max(std::max(dx, dy), dz);
 		
-		voxelResolution[0] = 77;
-		voxelResolution[1] = 64;
-		voxelResolution[2] = 64;
+		voxelResolution[0] = input_args.dim;
+		voxelResolution[1] = input_args.dim;
+		voxelResolution[2] = input_args.dim;
 		printf("dimx: %d dimy: %d dimz: %d\n", voxelResolution[0], voxelResolution[1], voxelResolution[2]);
 		
 		for (int i = 0; i < mesh.V.cols(); i++) {
@@ -261,6 +262,7 @@ public:
 				}
 			}
 		}
+		save_file();
 		std::cout << "n_size: " << n_size << std::endl;
     }
     
@@ -327,13 +329,17 @@ public:
 
     void advance(std::size_t iteration_counter, int64_t ms_per_frame) {
 		update_camera();
-        //double t = iteration_counter/100.0;
-		//Eigen::Matrix3f rot1 = Eigen::AngleAxisf(t, Eigen::Vector3f::UnitY()).toRotationMatrix();
-
-		//Eigen::Matrix4f rot = Eigen::Matrix4f::Identity();
-		//rot.block(0, 0, 3, 3) = rot1;
-        //model_matrix = rot;
     }
+
+	void save_file() {
+		std::ofstream outFile(input_args.output_file, std::ios::out);
+		assert(outFile.is_open());
+		outFile << input_args.dim << std::endl;
+		outFile << n_size << std::endl;
+		for (int i = 0; i < n_size; i++) 
+			outFile << position[3*i + 0] << " " << position[3*i + 1] << " " << position[3*i + 2] << std::endl;
+		outFile.close();
+	}
 
 private:
 	Eigen::Matrix4f model_matrix;
@@ -346,13 +352,25 @@ private:
 	int n_size;
 	std::vector<float> position;
 	std::vector<float> color;
-	float res;
 	int voxelResolution[3];	
 	Mesh mesh;
 };
 
+void parse_args(int argc, char** argv) {
+	if (argc < 7) {
+		printf("Example Usage: ./main -dim 64 -in ./bunny.obj -out ./bunny.vox\n");
+		std::exit(1);
+	}
+	assert(std::string(argv[1]) == "-dim");
+	input_args.dim = std::stoi(argv[2]);
+	assert(std::string(argv[3]) == "-in");
+	input_args.input_file = argv[4];
+	assert(std::string(argv[5]) == "-out");
+	input_args.output_file = argv[6];
+};
 
-int main() {
+int main(int argc, char** argv) {
+	parse_args(argc, argv);
 	GLFWwindow *window;
     oglh::init_gl("Voxelization", WINDOW_WIDTH, WINDOW_HEIGHT, &window);
 	glfwSetCursorPosCallback(window, Camera::mousemove_glfwCursorPosCallback);

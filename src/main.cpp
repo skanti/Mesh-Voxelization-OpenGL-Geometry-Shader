@@ -205,21 +205,21 @@ public:
         // <-
 		
 	
-		voxelResolution[0] = 77;
-		voxelResolution[1] = 77;
-		voxelResolution[2] = 77;
+		voxelResolution[0] = 23;
+		voxelResolution[1] = 23;
+		voxelResolution[2] = 23;
 		scale = 0.4/voxelResolution[0];
 
-		int imageRes[3] = {128, 128, 128};
-		std::vector<uint8_t> image(imageRes[0]*imageRes[1]*imageRes[2], 0);
+		std::vector<uint8_t> image(voxelResolution[0]*voxelResolution[1]*voxelResolution[2], 0);
 		//std::iota(image.begin(), image.end(), 1);
-		
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
 		// -> Occuancy Grid 
         glActiveTexture(GL_TEXTURE0);
         glGenTextures(1, &vao_voxelization.id_image_occupany);
         glBindTexture(GL_TEXTURE_3D, vao_voxelization.id_image_occupany);
-        glTexStorage3D(GL_TEXTURE_3D, 1, GL_R8UI, imageRes[0], imageRes[1], imageRes[2]);
-        glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, imageRes[0], imageRes[1], imageRes[2], GL_RED_INTEGER, GL_UNSIGNED_BYTE, image.data());
+        glTexStorage3D(GL_TEXTURE_3D, 1, GL_R8UI, voxelResolution[0], voxelResolution[1], voxelResolution[2]);
+        glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, voxelResolution[0], voxelResolution[1], voxelResolution[2], GL_RED_INTEGER, GL_UNSIGNED_BYTE, image.data());
         glBindImageTexture(0, vao_voxelization.id_image_occupany, 0, GL_TRUE, 0, GL_READ_WRITE, GL_R8UI);
 		// <-
 		
@@ -235,6 +235,7 @@ public:
 		voxelize();
 		glMemoryBarrier(GL_ALL_BARRIER_BITS);
 		
+		glPixelStorei(GL_PACK_ALIGNMENT, 1);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_3D, vao_voxelization.id_image_occupany);
 		glGetTexImage(GL_TEXTURE_3D, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, image.data());
@@ -243,10 +244,10 @@ public:
 		int sum = std::accumulate(image.begin(), image.end(), 0);
 
 		n_size = 0;
-		for (int i = 0; i < imageRes[2]; i++) {
-			for (int j = 0; j < imageRes[1]; j++) {
-				for (int k = 0; k < imageRes[0]; k++) {
-					int index = i*imageRes[1]*imageRes[0] + j*imageRes[0] + k;
+		for (int i = 0; i < voxelResolution[2]; i++) {
+			for (int j = 0; j < voxelResolution[1]; j++) {
+				for (int k = 0; k < voxelResolution[0]; k++) {
+					int index = i*voxelResolution[1]*voxelResolution[1] + j*voxelResolution[1] + k;
 					if (image[index]) {
 						position.push_back((float)k/voxelResolution[0]);	
 						position.push_back((float)j/voxelResolution[1]);	

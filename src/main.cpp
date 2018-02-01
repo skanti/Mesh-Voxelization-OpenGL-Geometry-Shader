@@ -3,8 +3,6 @@
 #include <chrono>
 #include <unordered_map>
 
-#include <igl/readOBJ.h>
-
 #include <omp.h>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -16,16 +14,15 @@
 #include "OpenGLHelper.h"
 #include "CameraHelper.h"
 
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "tiny_obj_loader.h"
+
 #define WINDOW_HEIGHT 960
 #define WINDOW_WIDTH 1280 
 
 struct Mesh {
-	Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> V;
-	Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> TC;
-	Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> N;
-	Eigen::Matrix<uint32_t, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>  F;
-	Eigen::Matrix<uint32_t, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>  FTC;
-	Eigen::Matrix<uint32_t, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>  FN;
+	Eigen::Matrix<float, -1, -1> V;
+	Eigen::Matrix<uint32_t, -1, -1> F;
 };
 
 
@@ -59,19 +56,31 @@ public:
 	}
 	
 	void load_mesh() {
-        std::string dir = "/home/amon/grive/development/Voxelization/resources/";
-		int success = igl::readOBJ(dir + std::string("bunny.obj"), mesh.V, mesh.TC, mesh.N, mesh.F, mesh.FTC, mesh.FN);
-		assert(success);
+		tinyobj::attrib_t attrib;
+        std::string filename = "/home/amon/grive/development/Voxelization/resources/bunny.obj";
+		std::vector<tinyobj::shape_t> shapes;
+		std::vector<tinyobj::material_t> materials;
+		std::string err;
+		bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, filename.c_str());
+    	assert(ret);
+		
+		mesh.V.resize(3, attrib.vertices.size()/3);	
+		mesh.F.resize(3, shapes[0].mesh.indices.size()/3);	
+
+		for (int i = 0; i < (int)shapes[0].mesh.indices.size(); i++)
+			mesh.F(i) = shapes[0].mesh.indices[i].vertex_index;
+		for (int i = 0; i < (int)attrib.vertices.size(); i++)
+			mesh.V(i) = attrib.vertices[i];
 		
 
 		float xmin = 1e9, xmax = 1e-9, ymin = 1e9, ymax = 1e-9, zmin = 1e9, zmax = 1e-9;
-		for (int i = 0; i < mesh.V.rows(); i++) {
-			xmin = mesh.V(i, 0) < xmin ? mesh.V(i, 0) : xmin;
-			ymin = mesh.V(i, 1) < ymin ? mesh.V(i, 1) : ymin;
-			zmin = mesh.V(i, 2) < zmin ? mesh.V(i, 2) : zmin;
-			xmax = mesh.V(i, 0) > xmax ? mesh.V(i, 0) : xmax;
-			ymax = mesh.V(i, 1) > ymax ? mesh.V(i, 1) : ymax;
-			zmax = mesh.V(i, 2) > zmax ? mesh.V(i, 2) : zmax;
+		for (int i = 0; i < mesh.V.cols(); i++) {
+			xmin = mesh.V(0, i) < xmin ? mesh.V(0, i) : xmin;
+			ymin = mesh.V(1, i) < ymin ? mesh.V(1, i) : ymin;
+			zmin = mesh.V(2, i) < zmin ? mesh.V(2, i) : zmin;
+			xmax = mesh.V(0, i) > xmax ? mesh.V(0, i) : xmax;
+			ymax = mesh.V(1, i) > ymax ? mesh.V(1, i) : ymax;
+			zmax = mesh.V(2, i) > zmax ? mesh.V(2, i) : zmax;
 		}
 
 		float dx = (xmax - xmin)*1.01;
@@ -79,10 +88,10 @@ public:
 		float dz = (zmax - zmin)*1.01;
 		float dmax = std::max(std::max(dx, dy), dz);
 
-		for (int i = 0; i < mesh.V.rows(); i++) {
-			mesh.V(i, 0) = (mesh.V(i, 0) - xmin)/dmax;
-			mesh.V(i, 1) = (mesh.V(i, 1) - ymin)/dmax;
-			mesh.V(i, 2) = (mesh.V(i, 2) - zmin)/dmax;
+		for (int i = 0; i < mesh.V.cols(); i++) {
+			mesh.V(0, i) = (mesh.V(0, i) - xmin)/dmax;
+			mesh.V(1, i) = (mesh.V(1, i) - ymin)/dmax;
+			mesh.V(2, i) = (mesh.V(2, i) - zmin)/dmax;
 		}	
 	}
 	
@@ -181,7 +190,7 @@ public:
 		// -> position (buffer object) 
         glGenBuffers(1, &vao_voxelization.id_vbo_position);
         glBindBuffer(GL_ARRAY_BUFFER, vao_voxelization.id_vbo_position);
-        glBufferData(GL_ARRAY_BUFFER, mesh.F.rows()*3*sizeof(GLfloat), mesh.V.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, mesh.F.cols()*3*sizeof(GLfloat), mesh.V.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -190,7 +199,7 @@ public:
     	// -> elements (buffer object) 
         glGenBuffers(1, &vao_voxelization.id_ebo);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vao_voxelization.id_ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.F.rows()*3*sizeof(GLuint), mesh.F.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.F.cols()*3*sizeof(GLuint), mesh.F.data(), GL_STATIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         // <-
 		
@@ -256,7 +265,7 @@ public:
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vao_voxelization.id_ebo);
         glUniform3iv(glGetUniformLocation(vao_voxelization.program, "voxelResolution"), 1, voxelResolution);
 		
-		glDrawElements(GL_TRIANGLES, 3*mesh.F.rows(), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, 3*mesh.F.cols(), GL_UNSIGNED_INT, 0);
         
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);

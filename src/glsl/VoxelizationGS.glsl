@@ -26,7 +26,7 @@ layout(triangle_strip, max_vertices = 3) out;
 uniform ivec3 voxelResolution;
 
 //Voxel output
-layout(rgba32i, binding = 0) uniform iimageBuffer voxelIndex;
+layout(r8ui, binding = 0) uniform uimageBuffer voxelIndex;
 layout(rgba8, binding = 1) uniform imageBuffer voxelValue;
 layout(binding = 2) uniform atomic_uint voxelCounter;
 
@@ -111,8 +111,11 @@ void swizzleTri(inout vec3 v0,
 
 void writeVoxels(ivec3 coord, uint val, vec4 color) {
 	int index = int(atomicCounterIncrement(voxelCounter));
-	imageStore(voxelIndex, index, ivec4(coord, 0));
-	imageStore(voxelValue, index, color);
+	imageStore(voxelIndex, 3*index + 0, uvec4(coord.x));
+	imageStore(voxelIndex, 3*index + 1, uvec4(coord.y));
+	imageStore(voxelIndex, 3*index + 2, uvec4(coord.z));
+	//imageStore(voxelValue, index, color);
+	memoryBarrierImage();
 	
 }
 
@@ -248,8 +251,12 @@ void main()
 	ivec3 minVoxIndex = ivec3(clamp(floor(AABBmin), ivec3(0), voxelResolution));
 	ivec3 maxVoxIndex = ivec3(clamp( ceil(AABBmax), ivec3(0), voxelResolution));
 	
-	int index = int(atomicCounterIncrement(voxelCounter));
-	imageStore(voxelIndex, index, ivec4(4*index + 0, 4*index + 1, 4*index + 2, 4*index + 3));
-	//voxelizeTriPostSwizzle(v0, v1, v2, n, unswizzle, minVoxIndex, maxVoxIndex);
+	//int index = int(atomicCounterIncrement(voxelCounter));
+	//memoryBarrierImage();
+	//imageStore(voxelIndex, 3*index + 0, ivec4(3*index + 0));
+	//imageStore(voxelIndex, 3*index + 1, ivec4(3*index + 1));
+	//imageStore(voxelIndex, 3*index + 2, ivec4(3*index + 2));
+	//memoryBarrierImage();
+	voxelizeTriPostSwizzle(v0, v1, v2, n, unswizzle, minVoxIndex, maxVoxIndex);
 }
 

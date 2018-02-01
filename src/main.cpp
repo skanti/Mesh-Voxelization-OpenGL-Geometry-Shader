@@ -82,12 +82,18 @@ public:
 			ymax = mesh.V(1, i) > ymax ? mesh.V(1, i) : ymax;
 			zmax = mesh.V(2, i) > zmax ? mesh.V(2, i) : zmax;
 		}
-
-		float dx = (xmax - xmin)*1.01;
-		float dy = (ymax - ymin)*1.01;
-		float dz = (zmax - zmin)*1.01;
+		
+		res = 0.002;
+		float dx = (xmax - xmin);
+		float dy = (ymax - ymin);
+		float dz = (zmax - zmin);
 		float dmax = std::max(std::max(dx, dy), dz);
-
+		
+		voxelResolution[0] = 77;
+		voxelResolution[1] = 64;
+		voxelResolution[2] = 64;
+		printf("dimx: %d dimy: %d dimz: %d\n", voxelResolution[0], voxelResolution[1], voxelResolution[2]);
+		
 		for (int i = 0; i < mesh.V.cols(); i++) {
 			mesh.V(0, i) = (mesh.V(0, i) - xmin)/dmax;
 			mesh.V(1, i) = (mesh.V(1, i) - ymin)/dmax;
@@ -205,10 +211,6 @@ public:
         // <-
 		
 	
-		voxelResolution[0] = 23;
-		voxelResolution[1] = 23;
-		voxelResolution[2] = 23;
-		scale = 0.4/voxelResolution[0];
 
 		std::vector<uint8_t> image(voxelResolution[0]*voxelResolution[1]*voxelResolution[2], 0);
 		//std::iota(image.begin(), image.end(), 1);
@@ -247,7 +249,7 @@ public:
 		for (int i = 0; i < voxelResolution[2]; i++) {
 			for (int j = 0; j < voxelResolution[1]; j++) {
 				for (int k = 0; k < voxelResolution[0]; k++) {
-					int index = i*voxelResolution[1]*voxelResolution[1] + j*voxelResolution[1] + k;
+					int index = i*voxelResolution[1]*voxelResolution[0] + j*voxelResolution[0] + k;
 					if (image[index]) {
 						position.push_back((float)k/voxelResolution[0]);	
 						position.push_back((float)j/voxelResolution[1]);	
@@ -298,8 +300,10 @@ public:
 		glBindBuffer(GL_ARRAY_BUFFER, vao_render.id_vbo_position);
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
         glEnableVertexAttribArray(2);
-	 
-        glUniform1f(glGetUniformLocation(vao_render.program, "scale"), scale);
+		
+		float s = 0.45;
+		float scale[3] = {s/voxelResolution[0], s/voxelResolution[1], s/voxelResolution[2]};
+        glUniform3fv(glGetUniformLocation(vao_render.program, "scale"), 1, scale);
         glUniformMatrix4fv(glGetUniformLocation(vao_render.program, "model_matrix"), 1, GL_FALSE, model_matrix.data());
         glUniformMatrix4fv(glGetUniformLocation(vao_render.program, "view_matrix"), 1, GL_FALSE, view_matrix.data());
         glUniformMatrix4fv(glGetUniformLocation(vao_render.program, "projection_matrix"), 1, GL_FALSE, projection_matrix.data());
@@ -342,7 +346,7 @@ private:
 	int n_size;
 	std::vector<float> position;
 	std::vector<float> color;
-	float scale;
+	float res;
 	int voxelResolution[3];	
 	Mesh mesh;
 };

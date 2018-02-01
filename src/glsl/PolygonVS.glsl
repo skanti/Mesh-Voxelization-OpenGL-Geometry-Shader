@@ -4,7 +4,7 @@ layout (location = 0) in vec3 vertex;
 layout (location = 1) in vec3 normal;
 layout (location = 2) in vec3 position;
 
-uniform float scale;
+uniform vec3 scale;
 uniform mat4 model_matrix;
 uniform mat4 view_matrix;
 uniform mat4 projection_matrix;

@@ -9,7 +9,7 @@
 // on a 3D texture using OpenGL image pipeline.
 ////////////////////////////////////////////////////////////////////////////////
 
-#version 420
+#version 450
 
 // Thin voxelization is when adjacent voxels are at least connected by vertices
 #define THIN 0 
@@ -247,6 +247,9 @@ void main()
 	ivec3 minVoxIndex = ivec3(clamp(floor(AABBmin), ivec3(0), voxelResolution));
 	ivec3 maxVoxIndex = ivec3(clamp( ceil(AABBmax), ivec3(0), voxelResolution));
 
+	//imageStore(voxelOccupancy, ivec3(0, 0, 0), uvec4(1));
+	//imageStore(voxelOccupancy, ivec3(0, 0, 1), uvec4(1));
+	//imageStore(voxelOccupancy, ivec3(0, 0, 2), uvec4(1));
 	voxelizeTriPostSwizzle(v0, v1, v2, n, unswizzle, minVoxIndex, maxVoxIndex);
 }
 

@@ -92,7 +92,8 @@ public:
 			mesh.V(0, i) = (mesh.V(0, i) - xmin)/dmax;
 			mesh.V(1, i) = (mesh.V(1, i) - ymin)/dmax;
 			mesh.V(2, i) = (mesh.V(2, i) - zmin)/dmax;
-		}	
+		}
+		
 	}
 	
 	void init_render_vao() {
@@ -203,38 +204,39 @@ public:
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         // <-
 		
-		voxelResolution[0] = 64;
+	
+		voxelResolution[0] = 77;
 		voxelResolution[1] = 64;
 		voxelResolution[2] = 64;
 		scale = 0.4/64;
-	
+		std::vector<uint8_t> image(voxelResolution[0]*voxelResolution[1]*voxelResolution[2], 0);
 		// -> Occuancy Grid 
         glActiveTexture(GL_TEXTURE0);
         glGenTextures(1, &vao_voxelization.id_image_occupany);
         glBindTexture(GL_TEXTURE_3D, vao_voxelization.id_image_occupany);
         glTexStorage3D(GL_TEXTURE_3D, 1, GL_R8UI, voxelResolution[0], voxelResolution[1], voxelResolution[2]);
-        //glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.width, image.height, GL_RGB, GL_UNSIGNED_BYTE, image.data.data());
-        glBindImageTexture(0, vao_voxelization.id_image_occupany, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_R8UI);
+        glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, voxelResolution[0], voxelResolution[1], voxelResolution[2], GL_RED_INTEGER, GL_UNSIGNED_BYTE, image.data());
+        glBindImageTexture(0, vao_voxelization.id_image_occupany, 0, GL_TRUE, 0, GL_READ_WRITE, GL_R8UI);
 		// <-
 		
-		// -> Color Grid 
-        glActiveTexture(GL_TEXTURE1);
-        glGenTextures(1, &vao_voxelization.id_image_color);
-        glBindTexture(GL_TEXTURE_3D, vao_voxelization.id_image_color);
-        glTexStorage3D(GL_TEXTURE_3D, 1, GL_RGBA8, voxelResolution[0], voxelResolution[1], voxelResolution[2]);
-        //glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.width, image.height, GL_RGB, GL_UNSIGNED_BYTE, image.data.data());
-        glBindImageTexture(1, vao_voxelization.id_image_color, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
-		// <-
+		//// -> Color Grid 
+        //glActiveTexture(GL_TEXTURE1);
+        //glGenTextures(1, &vao_voxelization.id_image_color);
+        //glBindTexture(GL_TEXTURE_3D, vao_voxelization.id_image_color);
+        //glTexStorage3D(GL_TEXTURE_3D, 1, GL_RGBA8, voxelResolution[0], voxelResolution[1], voxelResolution[2]);
+        ////glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.width, image.height, GL_RGB, GL_UNSIGNED_BYTE, image.data.data());
+        //glBindImageTexture(1, vao_voxelization.id_image_color, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA8);
+		//// <-
 		
 		voxelize();
 		
-		std::vector<uint8_t> image(voxelResolution[0]*voxelResolution[1]*voxelResolution[2], 0);
 		
         glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_3D, vao_voxelization.id_image_occupany);
 		glGetTexImage(GL_TEXTURE_3D, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, image.data());
 
 		int sum = std::accumulate(image.begin(), image.end(), 0);
-		
+		printf("n_total: %d sum %d\n", voxelResolution[0]*voxelResolution[1]*voxelResolution[2], sum);
 		n_size = 0;
 		for (int i = 0; i < voxelResolution[2]; i++) {
 			for (int j = 0; j < voxelResolution[1]; j++) {
@@ -244,13 +246,13 @@ public:
 						position.push_back((float)k/voxelResolution[0]);	
 						position.push_back((float)j/voxelResolution[1]);	
 						position.push_back((float)i/voxelResolution[2]);	
-						//printf("voxel: %d %d %d %d\n", image[index], i, j, k);
+						//printf("v: %d x: %d y: %d z: %d\n", image[index], i, j, k);
 						n_size++;
 					}
 				}
 			}
 		}
-
+		
 		std::cout << "n_size: " << n_size << std::endl;
     }
     

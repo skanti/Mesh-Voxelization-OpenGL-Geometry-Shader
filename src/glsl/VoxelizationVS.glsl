@@ -1,4 +1,4 @@
-#version 420
+#version 450
 
 // IN (from OpenGL)
 layout(location = 0) in vec3 position;

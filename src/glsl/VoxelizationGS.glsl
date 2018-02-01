@@ -249,7 +249,7 @@ void main()
 	ivec3 maxVoxIndex = ivec3(clamp( ceil(AABBmax), ivec3(0), voxelResolution));
 	
 	int index = int(atomicCounterIncrement(voxelCounter));
-	imageStore(voxelIndex, index, ivec4(index));
+	imageStore(voxelIndex, index, ivec4(4*index + 0, 4*index + 1, 4*index + 2, 4*index + 3));
 	//voxelizeTriPostSwizzle(v0, v1, v2, n, unswizzle, minVoxIndex, maxVoxIndex);
 }
 

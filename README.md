@@ -7,6 +7,9 @@ This small repo contains an algorithm for voxelizing `.ply` or `.obj` meshes wit
 ## Demo
 <a href="http://www.bilderload.com"><img src="http://www.bilderload.com/bild/405782/screenshotfrom2018012910233176JWZ.png" border="0" height="400"/></a>
 
+## Usage
+`./main -dim 64 -in ../resources/bunny.obj -out ../bunny/icosahedron.vox`
+ 
 ## How-To Install
 1. `mkdir build`
 2. `cd build`

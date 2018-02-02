@@ -17,7 +17,7 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-int-in-bool-context -fopenmp -DGLEW_NO_GLU")
 
-set(SOURCE_FILES_CPP )
+add_definitions(-DHOMEDIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 set(SOURCE_FILES_H src/OpenGLHelper.h src/CameraHelper.h)
 

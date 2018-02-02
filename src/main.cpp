@@ -113,7 +113,8 @@ public:
 		projection_matrix = oglh::make_perspective_matrix<float>(60.0f, ar, 0.3f, 50.0f); 	
 		//projection_matrix = oglh::make_ortho_matrix<float>(-1, 1, -1, 1, 0.3, 50); 	
 		
-        std::string dir = "/home/amon/grive/development/Voxelization/src/glsl/";
+		
+        std::string dir = std::string(HOMEDIR) + "/src/glsl/";
 		GLuint vs = 0, fs = 0;
 		oglh::load_shader(vs, dir + "/PolygonVS.glsl", GL_VERTEX_SHADER);
 		oglh::load_shader(fs, dir + "/PolygonFS.glsl", GL_FRAGMENT_SHADER);
@@ -184,7 +185,7 @@ public:
 
     void init_voxelization_vao() {
 	
-        std::string dir = "/home/amon/grive/development/Voxelization/src/glsl/";
+        std::string dir = std::string(HOMEDIR) + "/src/glsl/";
 		GLuint vs = 0, gs = 0, fs = 0;
 		oglh::load_shader(vs, dir + "/VoxelizationVS.glsl", GL_VERTEX_SHADER);
 		oglh::load_shader(gs, dir + "/VoxelizationGS.glsl", GL_GEOMETRY_SHADER);

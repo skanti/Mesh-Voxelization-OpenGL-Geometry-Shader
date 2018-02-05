@@ -16,6 +16,7 @@
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
+#include "tinyply.h"
 
 #define WINDOW_HEIGHT 960
 #define WINDOW_WIDTH 1280 
@@ -58,22 +59,40 @@ public:
 	}
 	
 	void load_mesh() {
-		tinyobj::attrib_t attrib;
-        std::string filename = input_args.input_file;
-		std::vector<tinyobj::shape_t> shapes;
-		std::vector<tinyobj::material_t> materials;
-		std::string err;
-		bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, filename.c_str());
-    	assert(ret);
-		
-		mesh.V.resize(3, attrib.vertices.size()/3);	
-		mesh.F.resize(3, shapes[0].mesh.indices.size()/3);	
+		if (input_args.input_file.find(".obj") != std::string::npos) { 
+			tinyobj::attrib_t attrib;
+        	std::string filename = input_args.input_file;
+			std::vector<tinyobj::shape_t> shapes;
+			std::vector<tinyobj::material_t> materials;
+			std::string err;
+			bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, filename.c_str());
+    		assert(ret);
+			
+			mesh.V.resize(3, attrib.vertices.size()/3);	
+			mesh.F.resize(3, shapes[0].mesh.indices.size()/3);	
 
-		for (int i = 0; i < (int)shapes[0].mesh.indices.size(); i++)
-			mesh.F(i) = shapes[0].mesh.indices[i].vertex_index;
-		for (int i = 0; i < (int)attrib.vertices.size(); i++)
-			mesh.V(i) = attrib.vertices[i];
-		
+			for (int i = 0; i < (int)shapes[0].mesh.indices.size(); i++)
+				mesh.F(i) = shapes[0].mesh.indices[i].vertex_index;
+			for (int i = 0; i < (int)attrib.vertices.size(); i++)
+				mesh.V(i) = attrib.vertices[i];
+		} else if (input_args.input_file.find(".ply") != std::string::npos) { 
+		    std::ifstream ss(input_args.input_file);
+		    tinyply::PlyFile file(ss);
+			std::vector<float> verts;
+			std::vector<uint32_t> faces;
+		    int n_vertices = file.request_properties_from_element("vertex", { "x", "y", "z" }, verts);
+		    // Try getting vertex_indices or vertex_index
+		    int n_indices = file.request_properties_from_element("face", { "vertex_indices" }, faces, 3);
+		    if (n_indices == 0)
+		      n_indices = file.request_properties_from_element("face", { "vertex_index" }, faces, 3);
+    		file.read(ss);
+			mesh.V = Eigen::Map<Eigen::Matrix<float, -1, -1>>(verts.data(), 3, n_vertices);
+			mesh.F = Eigen::Map<Eigen::Matrix<uint32_t, -1, -1>>(faces.data(), 3, n_indices);
+		} else {
+			fprintf(stderr, "Error: Mesh format not known.\n");
+			exit(1);
+		}
+		assert(mesh.V.cols() > 0 && mesh.F.cols() > 0 && "Error loading mesh.");
 
 		float xmin = 1e9, xmax = 1e-9, ymin = 1e9, ymax = 1e-9, zmin = 1e9, zmax = 1e-9;
 		for (int i = 0; i < mesh.V.cols(); i++) {

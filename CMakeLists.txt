@@ -19,7 +19,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-int-in-bool-context -fopenmp 
 
 add_definitions(-DHOMEDIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
-set(SOURCE_FILES_H src/OpenGLHelper.h src/CameraHelper.h)
+set(SOURCE_FILES_CPP src/tinyply.cpp)
+set(SOURCE_FILES_H src/OpenGLHelper.h src/CameraHelper.h src/tinyply.h)
 
 add_executable(main src/main.cpp ${SOURCE_FILES_CPP} ${SOURCE_FILES_H})
 target_link_libraries(main glfw GL GLEW)

@@ -3,6 +3,7 @@
 
 # generated 
 build
+*.vox
 
 # exception
 !.gitignore

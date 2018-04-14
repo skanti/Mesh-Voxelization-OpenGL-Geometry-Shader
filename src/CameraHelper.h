@@ -213,6 +213,8 @@ namespace Camera {
 	    // Get a right vector based on the up and lookat vector.
 	    vec3f_cross(r, f, u);
 	    vec3f_normalize(r);
+		vec3f_cross(u, r, f);
+		vec3f_normalize(u);
 	
 	    switch(cur_button)
 	    {
@@ -221,7 +223,7 @@ namespace Camera {
 	            /* Translate the camera along the right and up vectors
 	             * appropriately depending on the type of mouse movement.  */
 	            for(int i=0; i<3; i++) {
-	                float offset = r[i]*dx*trans_rate + -u[i]*dy*trans_rate;
+	                float offset = r[i]*dx*trans_rate - u[i]*dy*trans_rate;
 	                cam_position[i] = cam_position_down[i] - offset;
 	                cam_lookat[i]   = cam_lookat_down[i]   - offset;
 	            }

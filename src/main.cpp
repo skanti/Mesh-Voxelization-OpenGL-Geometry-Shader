@@ -68,13 +68,33 @@ public:
 			bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, filename.c_str());
     		assert(ret);
 			
-			mesh.V.resize(3, attrib.vertices.size()/3);	
-			mesh.F.resize(3, shapes[0].mesh.indices.size()/3);	
+			std::vector<int> Ftmp;
 
-			for (int i = 0; i < (int)shapes[0].mesh.indices.size(); i++)
-				mesh.F(i) = shapes[0].mesh.indices[i].vertex_index;
+			// Loop over shapes
+			for (size_t s = 0; s < shapes.size(); s++) {
+				// Loop over faces(polygon)
+				size_t index_offset = 0;
+				for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
+					int fv = shapes[s].mesh.num_face_vertices[f];
+
+					// Loop over vertices in the face.
+					for (size_t v = 0; v < fv; v++) {
+						// access to vertex
+						Ftmp.push_back(shapes[s].mesh.indices[index_offset + v].vertex_index);
+					}
+					index_offset += fv;
+				}	
+			}
+			
+			mesh.F.resize(3, Ftmp.size()/3);	
+			std::copy(Ftmp.begin(), Ftmp.end(), mesh.F.data());
+			mesh.V.resize(3, attrib.vertices.size()/3);	
 			for (int i = 0; i < (int)attrib.vertices.size(); i++)
 				mesh.V(i) = attrib.vertices[i];
+			
+			printf("n-faces: %d\n", mesh.F.cols());
+			printf("n-verts: %d\n", mesh.V.cols());
+
 		} else if (input_args.input_file.find(".ply") != std::string::npos) { 
 		    std::ifstream ss(input_args.input_file);
 		    tinyply::PlyFile file(ss);

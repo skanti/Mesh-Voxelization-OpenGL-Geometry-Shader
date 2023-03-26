@@ -2,6 +2,7 @@
 #include <random>
 #include <chrono>
 #include <unordered_map>
+#include <numeric>
 
 #include <omp.h>
 #include <Eigen/Dense>

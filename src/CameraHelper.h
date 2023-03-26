@@ -17,7 +17,7 @@ namespace Camera {
 
 	static float pitch = 0;	
 	static float pitch_down;	
-	static float yaw = M_PI;	
+	static float yaw = glm::pi<float>();	
 	static float yaw_down;	
 
 	static float rot_rate = 0.01f;  /**< amount to scale rotations  */
@@ -108,7 +108,7 @@ namespace Camera {
 	}
 	
 	void mat3f_rotateAxisVec(float result[9], float degrees, float axis[3]) {
-		float angle = (float)(degrees * M_PI/180.0f);
+		float angle = (float)(degrees * glm::pi<float>()/180.0f);
 		float c = std::cos(angle), s = std::sin(angle);
 		float t = 1-c;
 	
@@ -232,10 +232,10 @@ namespace Camera {
 				pitch = -dy*rot_rate + pitch_down;
 				yaw = -dx*rot_rate + yaw_down;
 				
-				if (pitch >= M_PI*0.49)
-					pitch = M_PI*0.49;
-				else if (pitch <= -M_PI*0.49)
-					pitch = -M_PI*0.49;
+				if (pitch >= glm::pi<float>()*0.49)
+					pitch = glm::pi<float>()*0.49;
+				else if (pitch <= -glm::pi<float>()*0.49)
+					pitch = -glm::pi<float>()*0.49;
 				
 	    		vec3f_sub(f, cam_lookat_down, cam_position_down);
 				float distance = vec3f_norm(f);

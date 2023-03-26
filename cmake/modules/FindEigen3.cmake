@@ -12,18 +12,12 @@
 #
 # default search dirs
 # 
-# Cmake file from: https://github.com/daw42/glslcookbook
 
 set( _Eigen3_HEADER_SEARCH_DIRS
 "/usr/include"
 "/usr/local/include"
 "${CMAKE_SOURCE_DIR}/includes"
 "C:/Program Files (x86)/eigen3/include/eigen3" )
-set( _Eigen3_LIB_SEARCH_DIRS
-"/usr/lib"
-"/usr/local/lib"
-"${CMAKE_SOURCE_DIR}/lib"
-"C:/Program Files (x86)/eigen3/lib" )
 
 # Check environment for root search directory
 set( _Eigen3_ENV_ROOT $ENV{Eigen3_ROOT} )
@@ -34,7 +28,6 @@ endif()
 # Put user specified location at beginning of search
 if( Eigen3_ROOT )
 	list( INSERT _Eigen3_HEADER_SEARCH_DIRS 0 "${Eigen3_ROOT}/include" )
-	list( INSERT _Eigen3_HEADER_SEARCH_DIRS 0 "${Eigen3_ROOT}/lib" )
 endif()
 
 # Search for the header

@@ -1,57 +1,35 @@
-# FindGLM - attempts to locate the glm matrix/vector library.
+# Locate the GLM library
 #
-# This module defines the following variables (on success):
-# GLM_INCLUDE_DIRS - where to find glm/glm.hpp
-# GLM_FOUND - if the library was successfully located
+# This module defines the following variables:
 #
-# It is trying a few standard installation locations, but can be customized
-# with the following variables:
-# GLM_ROOT_DIR - root directory of a glm installation
-# Headers are expected to be found in either:
-# <GLM_ROOT_DIR>/glm/glm.hpp OR
-# <GLM_ROOT_DIR>/include/glm/glm.hpp
-# This variable can either be a cmake or environment
-# variable. Note however that changing the value
-# of the environment variable will NOT result in
-# re-running the header search and therefore NOT
-# adjust the variables set by this module.
-#=============================================================================
-# Copyright 2012 Carsten Neumann
+# GLM_LIBRARY the name of the library;
+# GLM_INCLUDE_DIR where to find GLM include files.
+# GLM_FOUND true if both the GLM_LIBRARY and GLM_INCLUDE_DIR have been found.
 #
-# Distributed under the OSI-approved BSD License (the "License");
-# see accompanying file Copyright.txt for details.
+# To help locate the library and include file, you can define a
+# variable called GLM_ROOT which points to the root of the GLM library
+# installation.
 #
-# This software is distributed WITHOUT ANY WARRANTY; without even the
-# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# See the License for more information.
-#=============================================================================
-# (To distribute this file outside of CMake, substitute the full
-# License text for the above reference.)
 # default search dirs
+# 
 
-SET(_glm_HEADER_SEARCH_DIRS
+set( _GLM_HEADER_SEARCH_DIRS
 "/usr/include"
 "/usr/local/include"
 "${CMAKE_SOURCE_DIR}/includes"
-"C:/Program Files (x86)/glm" )
-# check environment variable
-SET(_glm_ENV_ROOT_DIR "$ENV{GLM_ROOT_DIR}")
-IF(NOT GLM_ROOT_DIR AND _glm_ENV_ROOT_DIR)
-	SET(GLM_ROOT_DIR "${_glm_ENV_ROOT_DIR}")
-ENDIF(NOT GLM_ROOT_DIR AND _glm_ENV_ROOT_DIR)
-# put user specified location at beginning of search
-IF(GLM_ROOT_DIR)
-	SET(_glm_HEADER_SEARCH_DIRS "${GLM_ROOT_DIR}"
-	"${GLM_ROOT_DIR}/include"
-	${_glm_HEADER_SEARCH_DIRS})
-ENDIF(GLM_ROOT_DIR)
-# locate header
+"C:/Program Files (x86)/glm/include" )
+
+# Check environment for root search directory
+set( _GLM_ENV_ROOT $ENV{GLM_ROOT} )
+if( NOT GLM_ROOT AND _GLM_ENV_ROOT )
+	set(GLM_ROOT ${_GLM_ENV_ROOT} )
+endif()
+
+# Put user specified location at beginning of search
+if( GLM_ROOT )
+	list( INSERT _GLM_HEADER_SEARCH_DIRS 0 "${GLM_ROOT}/include" )
+endif()
+
+# Search for the header
 FIND_PATH(GLM_INCLUDE_DIR "glm/glm.hpp"
-PATHS ${_glm_HEADER_SEARCH_DIRS})
-INCLUDE(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(GLM DEFAULT_MSG
-GLM_INCLUDE_DIR)
-IF(GLM_FOUND)
-	SET(GLM_INCLUDE_DIRS "${GLM_INCLUDE_DIR}")
-	MESSAGE(STATUS "GLM_INCLUDE_DIR = ${GLM_INCLUDE_DIR}")
-ENDIF(GLM_FOUND)
+PATHS ${_GLM_HEADER_SEARCH_DIRS} )

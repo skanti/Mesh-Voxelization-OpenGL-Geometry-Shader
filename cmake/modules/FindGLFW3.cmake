@@ -12,7 +12,6 @@
 #
 # default search dirs
 # 
-# Cmake file from: https://github.com/daw42/glslcookbook
 
 set( _glfw3_HEADER_SEARCH_DIRS
 "/usr/include"
@@ -42,7 +41,7 @@ FIND_PATH(GLFW3_INCLUDE_DIR "GLFW/glfw3.h"
 PATHS ${_glfw3_HEADER_SEARCH_DIRS} )
 
 # Search for the library
-FIND_LIBRARY(GLFW3_LIBRARY NAMES glfw3 glfw
+FIND_LIBRARY(GLFW3_LIBRARY NAMES GLFW3 GLFW
 PATHS ${_glfw3_LIB_SEARCH_DIRS} )
 INCLUDE(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(GLFW3 DEFAULT_MSG

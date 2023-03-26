@@ -12,7 +12,6 @@
 #
 # default search dirs
 # 
-# Cmake file from: https://github.com/daw42/glslcookbook
 
 set( _glew_HEADER_SEARCH_DIRS
 "/usr/include"
@@ -38,12 +37,12 @@ if( glew_ROOT )
 endif()
 
 # Search for the header
-FIND_PATH(glew_INCLUDE_DIR "GL/glew.h"
+FIND_PATH(GLEW_INCLUDE_DIRS "GL/glew.h"
 PATHS ${_glew_HEADER_SEARCH_DIRS} )
 
 # Search for the library
-FIND_LIBRARY(glew_LIBRARY NAMES GLEW
+FIND_LIBRARY(GLEW_LIBRARY NAMES GLEW
 PATHS ${_glew_LIB_SEARCH_DIRS} )
 INCLUDE(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(GLEW DEFAULT_MSG
-glew_LIBRARY glew_INCLUDE_DIR)
+GLEW_LIBRARY GLEW_INCLUDE_DIRS)

@@ -1,3 +1,6 @@
+
+#define GLEW_STATIC
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <stdlib.h>
@@ -55,7 +58,7 @@ namespace oglh {
 	  assert(aspect > 0);
 	  assert(zFar > zNear);
 	  assert(zNear > 0);
-	  Scalar radf = M_PI * fovy / 180.0;
+	  Scalar radf = glm::pi<float>() * fovy / 180.0;
 	  Scalar tan_half_fovy = std::tan(radf / 2.0);
 	  tr(0,0) = 1.0 / (aspect * tan_half_fovy);
 	  tr(1,1) = 1.0 / (tan_half_fovy);
